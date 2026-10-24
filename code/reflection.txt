@@ -5,3 +5,13 @@ terminology from this assignment (grain, long vs. wide, vectorized .str methods,
 coerce, NaT, pd.to_datetime format, .dt, concat, ignore_index, group by, named
 aggregation, reset_index, pivot_table, fill_value, melt, lineage), and make it
 actionable.
+
+I learned the importance of ignore_index=True. It prevents duplicate row labels. I got to practice building a multi-file payroll report using uploads, filters, metrics, charts, tables and a download into a single tool that can answer multiple people's questions. I used pd.concat to stack the weekly exports, then pivot_table and melt to reshape them, along with vectorized methods.
+
+I was confused sometimes when writing vectorized .strs, which clean up a whole column at once without apply. At first, I wrote functions using apply, then realized it would be a lot easier to write it using a .str. This was when I wrote the clean_number code. Also, when it came to E4 and other IDs, uppercasing "E4" doesn’t fix it, so I had to strip the letter, pad the digits with zfill(3), and add the E back. For pivot table, my first hours_grid left out aggfunc="sum". pivot_table defaults to the mean, so without aggfunc="sum" it would have averaged the hours.
+
+I reinforced my learning on data lineage, making sure that when I added columns and changed the dataframes, I never changed the original, building new tables at a different grain. I also got to practice using groupby and aggregation functions. In addition, In reshape.py, I used pivot_table (long to wide) in hours_grid and pay_by_month, and melt (wide to long) in missed_weeks.
+
+I need to practice more with pivot_table defaults (aggfunc and fill_value) and boolean masks, which was in the date filter and unmatched-ID. I used history[history["department"].isna()] to find unmatched rows, and I’m still practicing reading masks like (a) & (b).
+
+To practice this, I can build a small DataFrame with 2 employees and 2 weeks, predict the results based on the presence of aggfunc, run pivot_table once without aggfunc and once with it, then compare the results to each other and to my predictions. I can also take a smaller DataFrame and write df[df["x"].isna()] and df[df["x"] > 5] with a combined filter, and explain the results to myself to reinforce learning. I can use made-up data for the practice. I'll know I've nailed the concept when I accurately predict what will happen before I run the code.
