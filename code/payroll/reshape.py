@@ -41,6 +41,7 @@ def hours_grid(history: pd.DataFrame) -> pd.DataFrame:
     )
     return grid.reset_index()
 
+
 def missed_weeks(grid: pd.DataFrame) -> pd.DataFrame:
     """Every (employee, week) with zero hours in the grid — the weeks people missed.
 
@@ -52,7 +53,9 @@ def missed_weeks(grid: pd.DataFrame) -> pd.DataFrame:
     `melt` the grid back to long (the two name columns stay put; the week
     columns become `week_ending` / `hours_worked` pairs), then keep the zeros.
     """
-    long_table = grid.melt(id_vars=["employee_id", "display_name"], var_name="week_ending", value_name="hours_worked")
+    long_table = grid.melt(id_vars=["employee_id", "display_name"],
+                           var_name="week_ending",
+                           value_name="hours_worked")
     return long_table[long_table["hours_worked"] == 0].reset_index(drop=True)
 
 

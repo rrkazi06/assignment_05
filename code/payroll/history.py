@@ -83,7 +83,11 @@ def clean_number(values: pd.Series) -> pd.Series:
     - This is `clean_currency` from Assignment 04, with no `apply` — the `.str`
       methods do the looping for you.
     """
-    cleaned = values.str.replace("$", "", regex=False).str.replace(",", "", regex=False).str.strip()
+    cleaned = (
+        values.str.replace("$", "", regex=False)
+        .str.replace(",", "", regex=False)
+        .str.strip()
+    )
     return pd.to_numeric(cleaned, errors="coerce").fillna(0.0)
 
 

@@ -21,7 +21,6 @@ Less scaffolding here: the steps are described, the code is yours.
 import pandas as pd
 
 from .history import add_clean_columns, add_date_parts, combine_exports
-from . import history
 
 
 def format_name(names: pd.Series) -> pd.Series:

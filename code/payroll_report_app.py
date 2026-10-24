@@ -44,3 +44,80 @@ Test it: pytest tests/test_pipeline.py -k app
 #
 # What the page does NOT do: cleaning, grouping, pivoting. If you find yourself
 # writing a groupby or a pivot_table here, that logic belongs in the package.
+import streamlit as st
+
+from payroll.extract import load_employees, load_export
+from payroll import (
+    build_history,
+    hours_grid,
+    missed_weeks,
+    pay_by_month,
+    summarize_employees
+)
+
+st.title("Salt City Coffee — Quarterly Payroll Report")
+st.write(
+    "Upload the weekly payroll exports for the period you want to review --"
+    "old spreadsheet weeks and new app weeks can be mixed. "
+    "The roster is loaded automatically.")
+
+uploads = st.file_uploader(
+    "Upload weekly payroll exports (CSV)",
+    type="csv",
+    accept_multiple_files=True,
+    key="exports"
+)
+if not uploads:
+    st.stop()
+
+employees = load_employees()
+exports = [load_export(f) for f in uploads]
+history = build_history(exports, employees)
+
+missing_dept = history[history['department'].isna()]
+if not missing_dept.empty:
+    ids = ", ".join(missing_dept["employeeid"].unique())
+    st.warning(
+        f"Warning: {missing_dept.shape[0]} rows have no department "
+        f"and were left out: {ids})"
+    )
+    history = history.dropna(subset=['department'])
+
+dept = st.selectbox(
+    "Department",
+    ["All"] + history["department"].unique().tolist(),
+    key="department"
+)
+
+first = history["pay_date"].min().date()
+last = history["pay_date"].max().date()
+dates = st.date_input("Pay dates", value=(first, last), key="dates")
+start, end = dates if len(dates) == 2 else (first, last)
+
+in_dept = (dept == "All") | (history["department"] == dept)
+in_range = (history["pay_date"].dt.date >= start) & (history["pay_date"].dt.date <= end)
+filtered = history[in_dept & in_range]
+
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Weeks", filtered["week_ending"].nunique())
+c2.metric("Employees", filtered["employee_id"].nunique())
+c3.metric("Total hours", f"{filtered['hours_worked'].sum():,.2f}")
+c4.metric("Total gross pay", f"${filtered['gross_pay'].sum():,.2f}")
+
+st.bar_chart(pay_by_month(filtered), x="month")
+st.subheader("Employees")
+st.dataframe(summarize_employees(filtered))
+st.subheader("Hours by week")
+st.caption("0 means the employee was not paid that week.")
+grid = hours_grid(filtered)
+st.dataframe(grid)
+
+st.subheader("Missed weeks")
+st.dataframe(missed_weeks(grid))
+st.download_button(
+    "Download pay by month for the accountant (CSV)",
+    data=pay_by_month(filtered).to_csv(index=False),
+    file_name="pay_by_month.csv",
+    mime="text/csv",
+    key="download",
+)
